@@ -29,18 +29,18 @@ final class MenuItem: Model {
     }
     
     init(node: Node, in context: Context) throws {
-        id = try node.extract("_id")
+        id = try node.extract("id") // id = try node.extract("_id")
         name = try node.extract("name")
         price = try node.extract("price")
-        isSpecial = try node.extract("isSpecial")
+        isSpecial = try node.extract("isspecial")
     }
     
     func makeNode(context: Context) throws -> Node {
         return try Node(node: [
-            "_id": id,
+            "id": id, // "_id": id,
             "name": name,
             "price": price,
-            "isSpecial": isSpecial
+            "isspecial": isSpecial
             ])
     }
 }
@@ -61,7 +61,7 @@ extension MenuItem: Preparation {
             items.id()
             items.string("name")
             items.double("price")
-            items.bool("isSpecial")
+            items.bool("isspecial")
         }
     }
     
