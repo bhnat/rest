@@ -16,6 +16,33 @@ extension Query {
     }
 }
 
+extension MenuItem {
+    
+    func optionalUpdate(field: String, update: JSON?) -> MenuItem {
+        
+        switch field {
+        case "name":
+            guard let name = update?.string else {
+                return self
+            }
+            self.name = name
+        case "price":
+            guard let price = update?.double else {
+                return self
+            }
+            self.price = price
+        case "isSpecial":
+            guard let isSpecial = update?.bool else {
+                return self
+            }
+            self.isSpecial = isSpecial
+        default:
+            self
+        }
+        return self
+    }
+}
+
 let drop = Droplet(preparations: [MenuItem.self])
 
 try drop.addProvider(VaporMongo.Provider.self)
@@ -76,10 +103,23 @@ drop.put("test", ":id") { request in
     return try JSON(node: menuItem)
 }
 
-// TODO: Implement patch
-//drop.patch() { request in
-//    return Response(status: .ok)
-//}
+// based on the examples found in RFC 7396, introducing the JSON Merge Patch format
+// https://tools.ietf.org/html/rfc7396
+// http://williamdurand.fr/2014/02/14/please-do-not-patch-like-an-idiot/
+drop.patch("test", ":id") { request in
+    let id = try request.parameters.extract("id") as String
+    
+    guard var menuItem = try MenuItem.find(id) else {
+        return Response(status: .notFound)
+    }
+    menuItem = menuItem
+        .optionalUpdate(field:"name", update: request.json?["name"])
+        .optionalUpdate(field:"price", update: request.json?["price"])
+        .optionalUpdate(field:"isSpecial", update: request.json?["isSpecial"])
+    
+    try menuItem.save()
+    return menuItem
+}
 
 drop.resource("posts", PostController())
 
